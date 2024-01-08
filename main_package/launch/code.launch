@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Define the thresholdDegree parameter -->
+  <arg name="thresholdDegree" default="10.0" />
+  <arg name="distance" default="10.0" />
+
+  <!-- Launch the node with the specified thresholdDegree argument -->
+  <node name="surface_normals" pkg="main_package" type="estimating_surface_normals_pointCloud" > <!--output="screen"-->
+    <param name="thresholdDegree" value="$(arg thresholdDegree)" />
+    <param name="distance" value="$(arg distance)" />
+  </node>
+
+  <node name="Gps" pkg="main_package" type="gps" output="screen"> </node>
+  <node name="negative_volume" pkg="main_package" type="negative_volume" output="screen"></node>
+</launch>
+

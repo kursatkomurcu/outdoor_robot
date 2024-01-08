@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="world_file" value="$(arg world_file)" />
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find main_package)/worlds/$(arg world_file)"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <arg name="robot_namespace" default="/"/>
+
+  <arg name="x" default="-30.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="5.0"/>
+  <arg name="yaw" default="0.0"/>
+
+  <!-- Optionally disable teleop control -->
+  <arg name="joystick" default="true" />
+
+  <group ns="$(arg robot_namespace)">
+      <include file="$(find husky_control)/launch/control.launch">
+        <!-- <arg name="multimaster" value="$(arg multimaster)"/> -->
+      </include>
+      <include file="$(find husky_control)/launch/teleop_joystick.launch">
+        <arg name="joystick" value="$(arg joystick)" />
+      </include>
+
+    <!-- Additional nodes for specific accessories -->
+    <group if="$(optenv HUSKY_REALSENSE_ENABLED 0)">
+      <include file="$(find husky_gazebo)/launch/realsense.launch" />
+    </group>
+
+    <!-- Spawn robot in gazebo -->
+    <node name="spawn_husky_model" pkg="gazebo_ros" type="spawn_model"
+        args="-x $(arg x)
+              -y $(arg y)
+              -z $(arg z)
+              -Y $(arg yaw)
+              -unpause
+              -urdf
+              -param robot_description
+              -model husky
+              -robot_namespace $(arg robot_namespace)" />
+
+  </group>
+</launch> 
