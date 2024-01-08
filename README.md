@@ -115,6 +115,6 @@
 # Final Results
 
 
-![](https://github.com/Tinker-Twins/Husky/blob/main/kangal.jpeg)
+![](https://github.com/kursatkomurcu/outdoor_robot/blob/kangal_autonomous_ground_vehicle/kangal.jpeg)
 
-![](https://github.com/Tinker-Twins/Husky/blob/main/map.jpeg)
+![](https://github.com/kursatkomurcu/outdoor_robot/blob/kangal_autonomous_ground_vehicle/map.jpeg)
