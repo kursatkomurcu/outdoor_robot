@@ -1,0 +1,9 @@
+global_frame: map
+rolling_window: false
+track_unknown_space: true
+map_topic: /rtabmap/proj_map
+
+plugins:
+  - {name: static,                  type: "costmap_2d::StaticLayer"}
+  - {name: inflation,               type: "costmap_2d::InflationLayer"}
+  - {name: obstacles_layer,           type: "costmap_2d::ObstacleLayer"}

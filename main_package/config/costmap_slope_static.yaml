@@ -1,0 +1,17 @@
+global_frame: map
+rolling_window: true
+track_unknown_space: true
+
+publish_frequency: 2.0
+
+origin_x: 0.0
+origin_y: 0.0
+width: 20.0
+height: 20.0
+resolution: 0.05
+ 
+plugins:
+  - {name: static1,                  type: "costmap_2d::StaticLayer"}
+  - {name: static2,                  type: "costmap_2d::StaticLayer"}
+  - {name: obstacles_layer,         type: "costmap_2d::ObstacleLayer"}
+  - {name: inflation,               type: "costmap_2d::InflationLayer"}

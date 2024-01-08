@@ -1,0 +1,13 @@
+global_frame: map
+rolling_window: true
+robot_base_frame: base_footprint
+update_frequency: 5.0
+publish_frequency: 2.0
+transform_tolerance: 2.0
+
+
+plugins:
+  - {name: static1,                    type: "costmap_2d::StaticLayer"} 
+  - {name: static2,                    type: "costmap_2d::StaticLayer"} 
+  #- {name: obstacles_layer,           type: "costmap_2d::ObstacleLayer"}
+  #- {name: inflation,                 type: "costmap_2d::InflationLayer"}

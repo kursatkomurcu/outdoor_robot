@@ -1,0 +1,329 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="namespace" default="/rtabmap" />
+  <!-- This launch assumes that you have already
+       started you preferred RGB-D sensor and your IMU.
+       TF between frame_id and the sensors should already be set too. -->
+  <arg name="frame_id"                default="cashi" />
+  <arg name="rgb_topic"               default="/oakd_camera/rgb/image_raw" />
+  <arg name="depth_registered_topic"  default="/oakd_camera/depth/image_raw" />
+  <arg name="camera_info_topic"       default="/oakd_camera/rgb/camera_info" />
+  
+  <arg name="imu_topic"               default="/imu/data_raw" />
+  <arg name="imu_ignore_acc"          default="true" />
+  <arg name="imu_remove_gravitational_acceleration" default="true" />
+
+  <arg name="gps_topic" default="/gps/fix"/>
+
+    <!--<arg name="odom_topic"              default="/odometry/filtered"/> --> 
+	<arg name="rgbd_odom_topic" default="/visual_odom"/>
+	<!-- <arg name="odom_topic"     default="/odom"/> -->
+	<arg name="visual_odometry" default="true"/> 
+	<arg name="publish_odom" default="true"/> 
+
+  <arg name="map_frame_id"            default="map"/> 
+	<arg name="odom_frame_id"           default="odom"/> 
+
+	<arg name="subscribe_scan"          default="false"/>
+	<arg name="scan_topic"              default="scan"/>
+	
+	<arg name="rviz"                    default="true"/>
+	<arg name="rviz_cfg"                default="$(find main_package)/launch/robot.rviz" />
+
+  <arg name="output"                  default="screen"/> 
+	
+	<arg name="rgbd_sync"               default="false"/>         <!-- pre-sync rgb_topic, depth_topic, camera_info_topic -->
+	<arg name="approx_rgbd_sync"        default="true"/>          <!-- false=exact synchronization -->
+	<arg name="subscribe_rgbd"          default="$(arg rgbd_sync)"/>
+	<arg name="rgbd_topic"              default="rgbd_image" />
+	<arg name="depth_scale"             default="1.0" />         <!-- Deprecated, use rgbd_depth_scale instead -->
+	<arg name="rgbd_depth_scale"        default="$(arg depth_scale)" />
+	<arg name="rgbd_decimation"         default="1" />
+	
+	
+	<arg name="lidar_topic"         default="/velodyne_points"/>
+	
+	
+	<arg name="compressed"              default="false"/> 
+	<arg if="$(arg compressed)"     name="rgb_topic_relay"           default="$(arg rgb_topic)_relay"/>
+	<arg unless="$(arg compressed)" name="rgb_topic_relay"           default="$(arg rgb_topic)"/>
+	<arg if="$(arg compressed)"     name="depth_topic_relay"         default="$(arg depth_registered_topic)_relay"/>
+	<arg unless="$(arg compressed)" name="depth_topic_relay"         default="$(arg depth_registered_topic)"/>
+	<arg if="$(arg rgbd_sync)"      name="rgbd_topic_relay"          default="$(arg rgbd_topic)"/>
+	<arg unless="$(arg rgbd_sync)"  name="rgbd_topic_relay"          default="$(arg rgbd_topic)_relay"/>
+
+  <!-- Localization-only mode -->
+  <arg name="localization"      default="false"/>
+  <arg     if="$(arg localization)" name="rtabmap_args"  default=""/>
+  <arg unless="$(arg localization)" name="rtabmap_args"  default="--delete_db_on_start"/>
+
+  <group ns="rtabmap">
+    <node pkg="nodelet" type="nodelet" name="rgbd_sync" args="standalone rtabmap_sync/rgbd_sync" output="screen">
+    
+      <remap from="rgb/image"       to="$(arg rgb_topic)"/>
+      <remap from="depth/image"     to="$(arg depth_registered_topic)"/>
+      <remap from="rgb/camera_info" to="$(arg camera_info_topic)"/>
+      <remap from="rgbd_image"      to="$(arg namespace)/rgbd_image"/> <!-- output -->
+  
+      
+      <!-- Should be true for not synchronized camera topics 
+           (e.g., false for kinectv2, zed, realsense, true for xtion, kinect360)-->
+      <param name="approx_sync"       value="$(arg approx_rgbd_sync)"/> 
+    </node>
+
+    <!-- Visual Odometry -->
+    <node pkg="rtabmap_odom" type="rgbd_odometry" name="visual_odometry" output="screen" args="$(arg rtabmap_args)">
+      <remap unless="$(arg subscribe_rgbd)" from="rgb/image"         to="$(arg rgb_topic_relay)"/>
+	    <remap unless="$(arg subscribe_rgbd)" from="depth/image"       to="$(arg depth_topic_relay)"/>
+	    <remap unless="$(arg subscribe_rgbd)" from="rgb/camera_info"   to="$(arg camera_info_topic)"/>
+      <remap from="rgbd_image"      to="$(arg namespace)/rgbd_image"/>
+      
+      <remap from="odom"            to="$(arg rgbd_odom_topic)"/>
+      <!-- <remap from="odom"      to="/visual_odom"/>  -->
+
+      <param name="frame_id"               type="string" value="$(arg frame_id)"/>
+      <param name="odom_frame_id" type="string" value="$(arg odom_frame_id)"/>
+      <param name="publish_tf"             type="bool"   value="false"/>
+      <param name="publish_null_when_lost" type="bool"   value="true"/> 
+      <param name="guess_from_tf"          type="bool"   value="false"/> 
+
+      <param name="Odom/FillInfoData"      type="string" value="true"/>
+      <param name="Odom/ResetCountdown"    type="string" value="1"/>
+      <param name="Vis/FeatureType"        type="string" value="6"/>
+      <param name="OdomF2M/MaxSize"        type="string" value="1000"/>
+    </node>
+
+    <!-- SLAM -->
+    <node if="false" name="rtabmap" pkg="rtabmap_slam" type="rtabmap" output="screen" args="$(arg rtabmap_args)">
+      <param name="rtabmap_base_link" type="string" value="$(arg frame_id)"/>
+      <param name="odom_frame_id" type="string" value="$(arg odom_frame_id)"/>
+      <param name="map_frame_id" type="string" value="$(arg map_frame_id)"/>
+      <param name="tf_prefix" type="string" value="rtabmap_"/>
+      <param name="frame_id" type="string" value="$(arg frame_id)"/>
+      
+
+      <param name="subscribe_depth" type="bool" value="false"/>
+      <param name="subscribe_rgbd" type="bool" value="true"/> 
+      <param name="subscribe_rgb"   type="bool" value="false"/>
+
+      <remap from="odom" to="/odometry/filtered_fusion"/>
+    
+      <remap from="rgbd_image" to="$(arg namespace)/rgbd_image"/>
+
+      <!-- localization mode -->
+      <param name="Mem/InitWMWithAllNodes" type="string" value="$(arg localization)"/>
+      <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
+      <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
+
+      <param name="queue_size" type="int" value="10"/>
+
+      <!-- RTAB-Map's parameters -->
+      <param name="RGBD/NeighborLinkRefining" type="string" value="true"/>
+      <param name="RGBD/ProximityBySpace"     type="string" value="true"/>
+      <param name="RGBD/AngularUpdate"        type="string" value="0.0"/>
+      <param name="RGBD/LinearUpdate"         type="string" value="0.0"/>
+      <param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/>
+      <param name="RGBD/ProximityMaxGraphDepth" type="string" value="5"/>
+          
+      <!-- ICP parameters -->
+      <param name="Icp/VoxelSize"                 type="string" value="0.05"/>
+      <param name="Icp/MaxCorrespondenceDistance" type="string" value="0.1"/>
+          
+      <param name="database_path"           value=""/> 
+          
+      <param name="Rtabmap/DetectionRate"   value="1"/>
+      <param name="Rtabmap/MemoryThr"       value="1"/>
+
+      <param name="map_always_update"           value="true"/>
+      <param name="cloud_frustum_culling"           value="true"/>
+      
+      <param name="GridGlobal/ProbClampingMax"        value="0.971"/>
+      <param name="GridGlobal/ProbClampingMin"        value="0.1192"/>
+      <param name="GridGlobal/ProbHit"                value="0.9"/>
+      <param name="GridGlobal/ProbMiss"               value="0.1"/>
+      <param name="GridGlobal/FullUpdate"           type="bool"       value="true"/>
+
+      <param name="publish_tf" type="bool" value="false"/>
+
+    </node>
+
+    <!-- <node pkg="tf" type="static_transform_publisher" name="map_to_rtabmap" args="0 0 0 0 0 0 rtabmap/map rtabmap/rtabmap_frame" /> -->
+  </group>
+
+  <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform_node" respawn="true">
+
+    <param name="magnetic_declination_radians" value="0"/>
+    <param name="yaw_offset" value="0.0"/>
+    <param name="broadcast_utm_transform" value="true"/> 
+
+    <remap from="/imu/data" to="$(arg imu_topic)"/>
+    <remap from="/gps/fix" to="$(arg gps_topic)"/>
+    <remap from="/odometry/filtered" to="/odometry/filtered_fusion"/>
+  </node>
+
+  <!-- Odometry fusion (EKF), refer to demo launch file in robot_localization for more info -->
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_fusion" clear_params="true" output="screen"> 
+      <param name="publish_tf"             type="bool"   value="true"/>
+      <param name="frequency" value="25"/>
+      <param name="sensor_timeout" value="1.0"/>
+      <param name="two_d_mode" value="false"/>
+
+      <param name="odom_frame" value="odom"/>
+      <param name="base_link_frame" value="$(arg frame_id)"/>
+      <param name="world_frame" value="map"/>
+
+      <param name="transform_time_offset" value="0.0"/>
+
+      <param name="odom0" value="$(arg rgbd_odom_topic)"/> <!-- -->
+      <param name="imu0" value="$(arg imu_topic)"/>
+      
+
+      <param name="odom1" value="/odometry/gps"/> <!-- -->
+      <!-- <param name="imu1" value="$(arg imu_topic)"/> -->
+
+      <param name="odom2" value="r2d2_diff_drive_controller"/>
+      <!-- The order of the values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. -->
+      <rosparam param="odom0_config">[true, true, true,
+                                      false, false, false,
+                                      true, true, true,
+                                      false, false, false,
+                                      false, false, false]</rosparam> 
+
+      <rosparam     if="$(arg imu_ignore_acc)" param="imu0_config">[
+                                     false, false, false,
+                                     true,  true,  true,
+                                     false, false, false,
+                                     true,  true,  true,
+                                     false,  false,  false] </rosparam>
+      <rosparam unless="$(arg imu_ignore_acc)" param="imu0_config">[
+                                     false, false, false,
+                                     true,  true,  true,
+                                     false, false, false,
+                                     true,  true,  true,
+                                     true,  true,  true] </rosparam>
+
+      <rosparam param="odom1_config">[true, true, true,
+                                      false, false, false,
+                                      false, false, false,
+                                      false, false, false,
+                                      false, false, false]</rosparam> 
+
+
+      <param name="odom0_differential" value="true"/>
+      <param name="imu0_differential" value="false"/>
+
+
+      <param name="odom0_relative" value="true"/>
+      <param name="imu0_relative" value="true"/>
+
+      <param name="odom1_relative" value="true"/>
+      <param name="odom1_differential" value="false"/>
+
+      <param name="imu0_remove_gravitational_acceleration" value="$(arg imu_remove_gravitational_acceleration)"/>
+
+      <param name="print_diagnostics" value="true"/>
+
+      <!-- ======== ADVANCED PARAMETERS ======== -->
+      <param name="odom0_queue_size" value="5"/>
+      <param name="imu0_queue_size" value="50"/>
+
+      <!-- The values are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz,
+           vroll, vpitch, vyaw, ax, ay, az. -->
+      <rosparam param="process_noise_covariance">[0.005, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0.005, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0.006, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0.003, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0.003, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0.006, 0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0.0025, 0,     0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0.0025, 0,    0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0.004, 0,    0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0,    0.001, 0,    0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.001, 0,    0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.002, 0,    0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.001, 0,    0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.001, 0,
+                                                  0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.0015]</rosparam>
+
+      <!-- The values are ordered as x, y,
+           z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. -->
+           <rosparam param="initial_estimate_covariance">[1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,     0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9,  0,     0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     1e-9,  0,     0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     1e-9,  0,    0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     1e-9, 0,    0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    1e-9, 0,
+                                                          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    1e-9]</rosparam>
+
+      <remap from="/odometry/filtered" to="/odometry/filtered_fusion"/>
+
+    </node>
+
+    <node name="octomap_server" pkg="octomap_server" type="octomap_server_node" output="screen">
+      <param name="base_frame_id" value="base_footprint" />
+      <param name="frame_id" value="map" />
+      <param name="resolution" value="0.1" />
+
+      <!-- Sensor parameters -->
+      <!-- <param name="sensor_model/hit" value="0.9" /> 
+      <param name="sensor_model/miss" value="0.1" />
+
+      <param name="sensor_model/min" value="0.49" />
+      <param name="sensor_model/max" value="0.51" />  
+      <param name="sensor_model_max" value="0.97" />
+      <param name="sensor_model_min" value="0.1" />-->
+      <param name="sensor_model_hit" value="0.9" />
+      <param name="sensor_model_miss" value="0.5" />
+      <!-- <param name="sensor_model_max_range" value="100.0" />
+      <param name="sensor_sigma" value="0.001" /> -->
+
+      <!-- Occupancy parameters -->
+      <!-- <param name="occupancy_min" value="0.1" />
+      <param name="occupancy_max" value="0.9" />
+      <param name="occupancy_min_z" value="-2.0" />
+      <param name="occupancy_max_z" value="2.0" /> -->
+
+      <!-- Ground filtering -->
+      <param name="filter_ground" value="false" />
+      <param name="ground_filter_angle" value="0.1" />
+      <param name="ground_filter_distance" value="0.04" />
+      <param name="ground_filter_plane_distance" value="0.07" />
+
+      <!-- Point cloud filtering -->
+      <!-- <param name="pointcloud_min_z" value="-5.0" />
+      <param name="pointcloud_max_z" value="5.0" /> -->
+
+      <!-- Performance parameters -->
+      <param name="compress_map" value="false" />
+      <param name="process_rate" value="10.0" /> 
+      <param name="scan_rate" value="10.0" /> 
+      <param name="publish_rate" value="10.0" />
+
+
+      <remap from="cloud_in" to="/velodyne_points"/>
+    </node>
+
+  <!-- Visualization RVIZ -->
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_cfg)"/>
+  <node if="$(arg rviz)" pkg="nodelet" type="nodelet" name="points_xyzrgb" args="standalone rtabmap_util/point_cloud_xyzrgb" output="$(arg output)">
+
+    <remap unless="$(arg subscribe_rgbd)" from="rgb/image"         to="$(arg rgb_topic_relay)"/>
+    <remap unless="$(arg subscribe_rgbd)" from="depth/image"       to="$(arg depth_topic_relay)"/>
+    <remap unless="$(arg subscribe_rgbd)" from="rgb/camera_info"   to="$(arg camera_info_topic)"/>
+    <remap from="rgbd_image"        to="$(arg rgbd_topic_relay)"/>
+    <remap from="cloud"             to="voxel_cloud" />
+
+    <param name="decimation"  type="double" value="4"/>
+    <param name="voxel_size"  type="double" value="0.0"/>
+    <param name="approx_sync" type="bool"   value="true"/>
+  </node>
+
+</launch>

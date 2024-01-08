@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="gui" default="true"/>
+  <include file="$(find kangal_world)/launch/gazebo.launch">
+  	<arg name="gui" value="$(arg gui)"/>
+  </include>
+
+  <include file="$(find main_package)/launch/sensor_fusion.launch" />
+
+  <include file="$(find main_package)/launch/code.launch">
+  	<arg name="distance" value="50" />
+  	<arg name="thresholdDegree" value="50" />
+  </include>
+  
+  <include file="$(find main_package)/launch/move_base.launch" />
+  
+</launch> 
+ 

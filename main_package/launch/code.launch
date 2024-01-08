@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Define the thresholdDegree parameter -->
+  <arg name="thresholdDegree" default="55.0" />
+  <arg name="distance" default="50.0" />
+
+  <!-- Launch the node with the specified thresholdDegree argument -->
+  <node name="surface_normals_octomap" pkg="main_package" type="estimating_surface_normals_pointCloud" output="log"> <!--output="screen"-->
+    <param name="thresholdDegree" value="$(arg thresholdDegree)" />
+    <param name="distance" value="$(arg distance)" />
+    <param name="pointCloudTopic" value="/octomap_point_cloud_centers" />
+    <param name="occupancyGridTopic" value="/occupancy_grid" />
+  </node>
+  
+  <node if="true" name="surface_normals_depthcam" pkg="main_package" type="estimating_surface_normals_depthCam" output="screen"> <!--output="screen"-->
+    <param name="thresholdDegree" value="$(arg thresholdDegree)" />
+    <param name="distance" value="$(arg distance)" />
+    <param name="pointCloudTopic" value="/oakd_camera/depth/points" />
+    <param name="occupancyGridTopic" value="/occupancy_grid_depth" />
+  </node>
+
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
+    <rosparam command="load" file="$(find main_package)/config/laser_config.yaml" />
+    <remap from="scan" to="/laser/scan" />
+    <remap from="scan_filtered" to="/laser/scan_filtered" />
+  </node>
+  
+  <node name="laserscan_to_pointcloud" pkg="main_package" type="laserscan_to_pointcloud" output="screen"> 
+  	<param name="laserScanTopic" value="/laser/scan_filtered" />
+  </node>
+
+  <node name="point_cloud_derivative" pkg="main_package" type="point_cloud_derivative" output="screen">
+    <param name="thresholdDegree" value="$(arg thresholdDegree)" />
+    <param name="distance" value="$(arg distance)" />
+    <param name="pointCloudTopic" value="/laser_cloud" />
+    <param name="occupancyGridTopic" value="/occupancy_grid_z_" />
+  </node>
+
+  <node name="ransac_segmentation" pkg="main_package" type="ransac_segmentation" output="screen">
+    <param name="thresholdDegree" value="$(arg thresholdDegree)" />
+    <param name="distance" value="$(arg distance)" />
+    <param name="pointCloudTopic" value="/octomap_point_cloud_centers" />
+    <param name="occupancyGridTopic" value="/occupancy_grid_z" />
+  </node>
+
+  <node name="Gps" pkg="main_package" type="gps" output="screen"> </node>
+  <node if="false" name="negative_volume" pkg="main_package" type="negative_volume" output="screen"></node>
+  
+  <node if="false" pkg="topic_tools" type="relay" name="topic_relay_octomap" args="/velodyne_points/pointcloud_merged" />
+  <node if="false" pkg="topic_tools" type="relay" name="topic_relay_oakd" args="/oakd_camera/depth/points/pointcloud_merged" />
+</launch>
+
