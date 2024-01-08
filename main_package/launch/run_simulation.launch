@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+  <param name="mapping_file" value="$(arg mapping_file)"/>
+  <include file="$(find main_package)/launch/$(arg mapping_file)"> <!-- değiştir -->
+  </include>
+</launch> 
+ 
