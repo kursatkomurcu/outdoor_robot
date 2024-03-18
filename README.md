@@ -29,7 +29,7 @@
   ```
 3. Clone this repository:
   ```bash
-  $ git clone https://github.com/Tinker-Twins/Husky.git
+  $ git clone https://github.com/kursatkomurcu/outdoor_robot/tree/kangal_autonomous_ground_vehicle
   ```
 4. Change directory back to the Catkin workspace:
   ```bash
