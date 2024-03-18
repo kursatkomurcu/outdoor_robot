@@ -37,83 +37,14 @@
   ```
 5. Build the packages:
   ```bash
-  $ catkin_make
+  catkin_make
+
+  source devel/setup.bash
+
+  roslaunch run_simulation.launch
   ```
-
-## Usage:
-
-1. Keyboard Teleoperation:
-    ```bash
-    $ roslaunch husky_gazebo husky_playpen.launch
-    $ roslaunch husky_control teleop_keyboard.launch
-    ```
-
-2. Map-Less Navigation:
-    ```bash
-    $ roslaunch husky_gazebo husky_playpen.launch
-    $ roslaunch husky_viz view_robot.launch
-    $ roslaunch husky_navigation map_less_navigation.launch
-    ```
-
-3. Simultaneous Localization And Mapping (SLAM):
-    ```bash
-    $ roslaunch husky_gazebo husky_playpen.launch
-    $ roslaunch husky_viz view_robot.launch
-    $ roslaunch husky_navigation gmapping.launch
-    $ roslaunch husky_control teleop_keyboard.launch
-    ```
-    To save generated map to current working directory, run:
-    ```bash
-    $ rosrun map_server map_saver -f <filename>
-    ```
-
-4. Adaptive Monte Carlo Localization (AMCL):
-    ```bash
-    $ roslaunch husky_gazebo husky_playpen.launch
-    $ roslaunch husky_viz view_robot.launch
-    $ roslaunch husky_navigation amcl.launch
-    $ roslaunch husky_control teleop_keyboard.launch
-    ```
-
-5. Map-Based Navigation:
-    ```bash
-    $ roslaunch husky_gazebo husky_playpen.launch
-    $ roslaunch husky_viz view_robot.launch
-    $ roslaunch husky_navigation map_based_navigation.launch
-    ```
-
-6. 3D Mapping and IMU/GPS Fusion:
-    ```bash
-    $ roslaunch main_package run_gazebo_world.launch world_file:=clearpath_playpen.world
-    $ roslaunch main_package teleoperation.launch
-    $ roslaunch main_package run_simulation.launch mapping_file:=sensor_fusion.launch
-    ```
-7. Move Base Navigation:
-    ```bash
-    $ roslaunch main_package run_gazebo_world.launch world_file:=clearpath_playpen.world
-    $ roslaunch main_package teleoperation.launch
-    $ roslaunch main_package run_simulation.launch mapping_file:=sensor_fusion.launch
-    $ roslaunch main_package move_base.launch
-    ```
-8. PCL Estimating Surface Normals:
-    ```bash
-    $ roslaunch main_package run_gazebo_world.launch world_file:=clearpath_playpen.world
-    $ roslaunch main_package teleoperation.launch
-    $ roslaunch main_package run_simulation.launch mapping_file:=sensor_fusion.launch
-    $ roslaunch main_package estimating_surface_normals_pointCloud.launch 
-    ```
-
-## Video Tutorials:
-
-1. [Installation](https://youtu.be/kXD9GfkbkHk)
-2. [Teleoperation](https://youtu.be/B-4VfZrvVJo)
-3. [Map-Less Navigation](https://youtu.be/3sVrWRfWrEY)
-4. [SLAM](https://youtu.be/-_bC1_xs9TY)
-5. [Map-Based Localization](https://youtu.be/RrX4_UMeTQ8)
-6. [Map-Based Navigation](https://youtu.be/F5OiuIkqxcc)
-
+    
 # Final Results
-
 
 ![](https://github.com/kursatkomurcu/outdoor_robot/blob/kangal_autonomous_ground_vehicle/kangal.jpeg)
 
