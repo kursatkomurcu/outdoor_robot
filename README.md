@@ -38,7 +38,7 @@
 
   source devel/setup.bash
 
-  roslaunch run_simulation.launch
+  roslaunch main_package run_simulation.launch
   ```
     
 # Final Results
