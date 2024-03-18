@@ -1,6 +1,8 @@
 # Husky
 ### ROS Packages for Husky Robot
 
+For access main study, go to the **kangal_autonomous_ground_vehicle branch**.
+
 ![](https://github.com/Tinker-Twins/Husky/blob/main/Husky.png)
 
 ## Dependencies
