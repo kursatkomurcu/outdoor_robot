@@ -1,5 +1,11 @@
 # Husky
 
+## Paper 
+https://ww2.mini.pw.edu.pl/pprai2024/papers/91.pdf
+
+username: user
+password: pprai2024
+
 ## Dependencies
 
  - fath_pivot_mount_description: `$ sudo apt-get install ros-noetic-fath-pivot-mount-description`
