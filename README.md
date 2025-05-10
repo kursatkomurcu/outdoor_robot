@@ -1,11 +1,11 @@
-# Husky
-
-## Paper 
+# Paper 
 https://ww2.mini.pw.edu.pl/pprai2024/papers/91.pdf
 
 username: user
 
 password: pprai2024
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/kursatkomurcu)
 
 ## Dependencies
 
